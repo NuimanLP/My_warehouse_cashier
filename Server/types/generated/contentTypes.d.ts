@@ -794,21 +794,25 @@ export interface ApiProductProduct extends Schema.CollectionType {
     singularName: 'product';
     pluralName: 'products';
     displayName: 'Product';
+    description: '';
   };
   options: {
     draftAndPublish: false;
   };
   attributes: {
-    product_name: Attribute.String;
-    barcode: Attribute.String;
-    pricing: Attribute.Decimal;
+    Product_name: Attribute.String;
+    Barcode: Attribute.String;
+    Pricing: Attribute.Decimal;
     StockQuantity: Attribute.Integer;
-    description: Attribute.Text;
+    Description: Attribute.Text;
     transactions: Attribute.Relation<
       'api::product.product',
       'manyToMany',
       'api::transaction.transaction'
     >;
+    Shot: Attribute.Media;
+    Branding: Attribute.String;
+    Category: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

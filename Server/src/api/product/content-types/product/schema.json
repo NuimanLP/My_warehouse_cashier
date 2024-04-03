@@ -4,26 +4,27 @@
   "info": {
     "singularName": "product",
     "pluralName": "products",
-    "displayName": "Product"
+    "displayName": "Product",
+    "description": ""
   },
   "options": {
     "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
-    "product_name": {
+    "Product_name": {
       "type": "string"
     },
-    "barcode": {
+    "Barcode": {
       "type": "string"
     },
-    "pricing": {
+    "Pricing": {
       "type": "decimal"
     },
     "StockQuantity": {
       "type": "integer"
     },
-    "description": {
+    "Description": {
       "type": "text"
     },
     "transactions": {
@@ -31,6 +32,23 @@
       "relation": "manyToMany",
       "target": "api::transaction.transaction",
       "mappedBy": "products"
+    },
+    "Shot": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "Branding": {
+      "type": "string"
+    },
+    "Category": {
+      "type": "string"
     }
   }
 }
