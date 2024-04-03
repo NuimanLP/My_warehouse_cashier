@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import Product from './component/product.js'; 
+import Product from './component/Javascript/product.js'; 
 import reportWebVitals from './reportWebVitals';
 import {
   createBrowserRouter,
