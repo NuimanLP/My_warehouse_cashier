@@ -16,13 +16,13 @@ function Product() {
       const jwt = sessionStorage.getItem('jwt');
 
       try {
-        const response = await axios.get(`${config.serverUrlPrefix}/products?populate=*`, {
+        const response = await axios.get(`${config.serverUrlPrefix}/products/getProductInfo`, {
           headers: {
             Authorization: `Bearer ${jwt}`,
           },
         });
-        console.log('Products response:', response.data.data);
-        setProducts(response.data.data);
+        console.log('Products response:', response.data);
+        setProducts(response.data);
       } catch (error) {
         console.error('Failed to fetch products:', error);
       }
@@ -32,7 +32,7 @@ function Product() {
   }, []);
 
   return (
-    
+
     <Table striped bordered hover size="sm">
       <thead>
         <h1>Product List</h1>
@@ -48,10 +48,16 @@ function Product() {
         {products.map((product, index) => (
           <tr key={product.id}>
             <td>{index + 1}</td>
-            <td><img src = {product.attributes.Shot.data.attributes.formats.small.url}/></td>
-            <td>{product.attributes.Branding} {product.attributes.Category} {product.attributes.Product_name}</td>
-            <td>{product.attributes.Pricing}</td>
-            <td>{product.attributes.Barcode}</td>
+            <td>
+              <img
+                src={`${config.serverReceipt}${product.Shot.formats.small.url}`}
+                alt={product.productName}
+                style={{ width: '100px' }}
+              />
+            </td>            
+            <td>{product.Branding} {product.Category} {product.Product_name}</td>
+            <td>{product.Pricing}</td>
+            <td>{product.Barcode}</td>
           </tr>
         ))}
       </tbody>
