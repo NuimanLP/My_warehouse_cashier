@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form } from 'react-bootstrap';
+import { Table, Button, Modal, Form, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import config from '../../config';
 import '../CSS/product.css';
+import Logout from './logout.js';
 import QrCodeScanner from './Qrcode.js';
 
 function Product() {
   const [products, setProducts] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState({
     id: '',
     Product_name: '',
@@ -48,6 +50,7 @@ function Product() {
       });
       console.log('Products response:', response.data);
       setProducts(response.data);
+      handleClose();
     } catch (error) {
       console.error('Failed to fetch products:', error);
     }
@@ -58,6 +61,7 @@ function Product() {
       console.error("No product selected for update");
       return;
     }
+    setIsLoading(true);
 
     try {
       const response = await axios.put(`${config.serverUrlPrefix}/products/${selectedProduct.id}`, {
@@ -131,83 +135,89 @@ function Product() {
           <Modal.Title>Edit Product</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Product ID</Form.Label>
-              <Form.Control
-                type="text"
-                // name = 'Product_name'
-                value={selectedProduct?.Product_name}
-                onChange={(e) => setSelectedProduct({ ...selectedProduct, Product_name: e.target.value })}
-              />
-            </Form.Group>
+          {isLoading ? (
+            <div className="text-center">
+              <Spinner animation="border" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </Spinner>
+            </div>
+          ) : (
+            <Form>
+              <Form.Group className="mb-3">
+                <Form.Label>Product ID</Form.Label>
+                <Form.Control
+                  type="text"
+                  // name = 'Product_name'
+                  value={selectedProduct?.Product_name}
+                  onChange={(e) => setSelectedProduct({ ...selectedProduct, Product_name: e.target.value })}
+                />
+              </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Branding</Form.Label>
-              <Form.Control
-                type="text"
-                // name = 'Branding'
-                value={selectedProduct?.Branding}
-                onChange={(e) => setSelectedProduct({ ...selectedProduct, Branding: e.target.value })}
-              />
-            </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Branding</Form.Label>
+                <Form.Control
+                  type="text"
+                  // name = 'Branding'
+                  value={selectedProduct?.Branding}
+                  onChange={(e) => setSelectedProduct({ ...selectedProduct, Branding: e.target.value })}
+                />
+              </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Pricing</Form.Label>
-              <Form.Control
-                type="text"
-                // name = 'Pricing'
-                value={selectedProduct?.Pricing}
-                onChange={(e) => setSelectedProduct({ ...selectedProduct, Pricing: e.target.value })}
-              />
-            </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Pricing</Form.Label>
+                <Form.Control
+                  type="text"
+                  // name = 'Pricing'
+                  value={selectedProduct?.Pricing}
+                  onChange={(e) => setSelectedProduct({ ...selectedProduct, Pricing: e.target.value })}
+                />
+              </Form.Group>
 
+              <Form.Group className="mb-3">
+                <Form.Label>Quantity</Form.Label>
+                <Form.Control
+                  type="number"
+                  value={selectedProduct?.StockQuantity}
+                  onChange={(e) => {
+                    // Parse integer (value,10) 10 == NumberBase ฐาน10
+                    const value = parseInt(e.target.value, 10);
 
-            <Form.Group className="mb-3">
-              <Form.Label>Quantity</Form.Label>
-              <Form.Control
-                type="number"
-                value={selectedProduct?.StockQuantity}
-                onChange={(e) => {
-                  // Parse integer (value,10) 10 == NumberBase ฐาน10
-                  const value = parseInt(e.target.value, 10); 
+                    // If value is NaN,setStockQuan = '' else Max quantity = 0
+                    setSelectedProduct({
+                      ...selectedProduct, StockQuantity: isNaN(value) ? '' : Math.max(0, value)
+                    });
+                  }}
+                />
+              </Form.Group>
 
-                  // If value is NaN,setStockQuan = '' else Max quantity = 0
-                  setSelectedProduct({...selectedProduct,StockQuantity: isNaN(value) ? '' : Math.max(0, value)
-                  });
-                }}
-              />
-            </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Image</Form.Label>
+                <Form.Control
+                  type="file"
+                  // name = 'Image'
+                  value={selectedProduct?.Image}
+                  onChange={(e) => setSelectedProduct({ ...selectedProduct, Image: e.target.value })}
+                />
+              </Form.Group>
 
-
-            <Form.Group className="mb-3">
-              <Form.Label>Image</Form.Label>
-              <Form.Control
-                type="file"
-                // name = 'Image'
-                value={selectedProduct?.Image}
-                onChange={(e) => setSelectedProduct({ ...selectedProduct, Image: e.target.value })}
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Barcode</Form.Label>
-              <Form.Control
-                type="text"
-                // name = 'Barcode'
-                value={selectedProduct?.Barcode}
-                onChange={(e) => setSelectedProduct({ ...selectedProduct, Barcode: e.target.value })}
-              />
-            </Form.Group>
-          </Form>
+              <Form.Group className="mb-3">
+                <Form.Label>Barcode</Form.Label>
+                <Form.Control
+                  type="text"
+                  // name = 'Barcode'
+                  value={selectedProduct?.Barcode}
+                  onChange={(e) => setSelectedProduct({ ...selectedProduct, Barcode: e.target.value })}
+                />
+              </Form.Group>
+            </Form>
+          )}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>Close</Button>
-          <Button variant="primary" onClick={() => {
-            handleClose();
-          }}>Save Changes</Button>
+          <Button variant="primary" onClick={handleSaveChanges} disabled={isLoading}>Save Changes</Button>
         </Modal.Footer>
       </Modal>
+      <Logout />
     </div>
   );
 }
