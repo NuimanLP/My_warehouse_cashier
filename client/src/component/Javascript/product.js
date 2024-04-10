@@ -8,53 +8,81 @@ import QrCodeScanner from './Qrcode.js';
 function Product() {
   const [products, setProducts] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [selectedBranding, setSelectedBranding] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedPricing, setSelectedPricing] = useState(null);
-  const [selectedBarcode, setSelectedBarcode] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedStockQuantity, setSelectedStockQuantity] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState({
+    id: '',
+    Product_name: '',
+    Branding: '',
+    StockQuantity: '',
+    Pricing: '',
+    Barcode: '',
+    Image: '',
+  });
 
   const handleEdit = (product) => {
-    setSelectedBranding(product);
-    setSelectedProduct(product);
-    setSelectedPricing(product);
-    setSelectedBarcode(product);
-    setSelectedImage(product);
-    setSelectedStockQuantity(product);
+    setSelectedProduct({
+      id: product.id,
+      Product_name: product.Product_name,
+      Branding: product.Branding,
+      StockQuantity: product.StockQuantity,
+      Pricing: product.Pricing,
+      Barcode: product.Barcode,
+      ImageUrl: product.Shot.formats.small.url
+    });
     setShowModal(true);
   };
-
   const handleClose = () => {
     setShowModal(false);
-    setSelectedBranding(null);
-    setSelectedProduct(null);
-    setSelectedPricing(null);
-    setSelectedBarcode(null);
-    setSelectedImage(null);
-    setSelectedStockQuantity(null);
   };
 
+  const fetchProducts = async () => {
+    if (!sessionStorage.getItem('jwt')) {
+      throw new Error('No JWT token found');
+    }
+    const jwt = sessionStorage.getItem('jwt');
+
+    try {
+      const response = await axios.get(`${config.serverUrlPrefix}/products/getProductInfo`, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+      console.log('Products response:', response.data);
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    if (!selectedProduct.id) {
+      console.error("No product selected for update");
+      return;
+    }
+
+    try {
+      const response = await axios.put(`${config.serverUrlPrefix}/products/${selectedProduct.id}`, {
+        data: {
+          Product_name: selectedProduct.Product_name,
+          Branding: selectedProduct.Branding,
+          StockQuantity: selectedProduct.StockQuantity,
+          Pricing: selectedProduct.Pricing,
+          Barcode: selectedProduct.Barcode,
+        },
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('jwt')}`,
+        },
+      });
+
+      console.log("Product updated successfully:", response.data);
+      fetchProducts();
+      handleClose();
+    } catch (error) {
+      console.error("Failed to update product:", error);
+    }
+  };
+
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      if (!sessionStorage.getItem('jwt')) {
-        throw new Error('No JWT token found');
-      }
-      const jwt = sessionStorage.getItem('jwt');
-
-      try {
-        const response = await axios.get(`${config.serverUrlPrefix}/products/getProductInfo`, {
-          headers: {
-            Authorization: `Bearer ${jwt}`,
-          },
-        });
-        console.log('Products response:', response.data);
-        setProducts(response.data);
-      } catch (error) {
-        console.error('Failed to fetch products:', error);
-      }
-    };
-
     fetchProducts();
   }, []);
 
@@ -108,7 +136,8 @@ function Product() {
               <Form.Label>Product ID</Form.Label>
               <Form.Control
                 type="text"
-                defaultValue={selectedProduct?.Product_name}
+                // name = 'Product_name'
+                value={selectedProduct?.Product_name}
                 onChange={(e) => setSelectedProduct({ ...selectedProduct, Product_name: e.target.value })}
               />
             </Form.Group>
@@ -117,8 +146,9 @@ function Product() {
               <Form.Label>Branding</Form.Label>
               <Form.Control
                 type="text"
-                defaultValue={selectedBranding?.Branding}
-                onChange={(e) => setSelectedBranding({ ...selectedBranding, Branding: e.target.value })}
+                // name = 'Branding'
+                value={selectedProduct?.Branding}
+                onChange={(e) => setSelectedProduct({ ...selectedProduct, Branding: e.target.value })}
               />
             </Form.Group>
 
@@ -126,8 +156,9 @@ function Product() {
               <Form.Label>Pricing</Form.Label>
               <Form.Control
                 type="text"
-                defaultValue={selectedPricing?.Pricing}
-                onChange={(e) => setSelectedPricing({ ...selectedPricing, Pricing: e.target.value })}
+                // name = 'Pricing'
+                value={selectedProduct?.Pricing}
+                onChange={(e) => setSelectedProduct({ ...selectedProduct, Pricing: e.target.value })}
               />
             </Form.Group>
 
@@ -135,18 +166,27 @@ function Product() {
             <Form.Group className="mb-3">
               <Form.Label>Quantity</Form.Label>
               <Form.Control
-                type="text"
-                defaultValue={selectedStockQuantity?.StockQuantity}
-                onChange={(e) => setSelectedStockQuantity({ ...selectedStockQuantity, StockQuantity: e.target.value })}
+                type="number"
+                value={selectedProduct?.StockQuantity}
+                onChange={(e) => {
+                  // Parse integer (value,10) 10 == NumberBase ฐาน10
+                  const value = parseInt(e.target.value, 10); 
+
+                  // If value is NaN,setStockQuan = '' else Max quantity = 0
+                  setSelectedProduct({...selectedProduct,StockQuantity: isNaN(value) ? '' : Math.max(0, value)
+                  });
+                }}
               />
             </Form.Group>
+
 
             <Form.Group className="mb-3">
               <Form.Label>Image</Form.Label>
               <Form.Control
-                type="image"
-                defaultValue={selectedImage?.Image}
-                onChange={(e) => setSelectedImage({ ...selectedImage, Image: e.target.value })}
+                type="file"
+                // name = 'Image'
+                value={selectedProduct?.Image}
+                onChange={(e) => setSelectedProduct({ ...selectedProduct, Image: e.target.value })}
               />
             </Form.Group>
 
@@ -154,8 +194,9 @@ function Product() {
               <Form.Label>Barcode</Form.Label>
               <Form.Control
                 type="text"
-                defaultValue={selectedBarcode?.Barcode}
-                onChange={(e) => setSelectedBarcode({ ...selectedBarcode, Barcode: e.target.value })}
+                // name = 'Barcode'
+                value={selectedProduct?.Barcode}
+                onChange={(e) => setSelectedProduct({ ...selectedProduct, Barcode: e.target.value })}
               />
             </Form.Group>
           </Form>
@@ -163,7 +204,6 @@ function Product() {
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>Close</Button>
           <Button variant="primary" onClick={() => {
-            need implment
             handleClose();
           }}>Save Changes</Button>
         </Modal.Footer>
