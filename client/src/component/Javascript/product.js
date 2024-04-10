@@ -9,7 +9,7 @@ import QrCodeScanner from './Qrcode.js';
 function Product() {
   const [products, setProducts] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const jwt = sessionStorage.getItem('jwt');
   const [selectedProduct, setSelectedProduct] = useState({
     id: '',
     Product_name: '',
@@ -40,8 +40,6 @@ function Product() {
     if (!sessionStorage.getItem('jwt')) {
       throw new Error('No JWT token found');
     }
-    const jwt = sessionStorage.getItem('jwt');
-
     try {
       const response = await axios.get(`${config.serverUrlPrefix}/products/getProductInfo`, {
         headers: {
@@ -61,9 +59,9 @@ function Product() {
       console.error("No product selected for update");
       return;
     }
-    setIsLoading(true);
 
     try {
+      console.log(jwt);
       const response = await axios.put(`${config.serverUrlPrefix}/products/${selectedProduct.id}`, {
         data: {
           Product_name: selectedProduct.Product_name,
@@ -73,7 +71,7 @@ function Product() {
           Barcode: selectedProduct.Barcode,
         },
         headers: {
-          Authorization: `Bearer ${sessionStorage.getItem('jwt')}`,
+          Authorization: `Bearer ${jwt}`,
         },
       });
 
@@ -135,13 +133,6 @@ function Product() {
           <Modal.Title>Edit Product</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {isLoading ? (
-            <div className="text-center">
-              <Spinner animation="border" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </Spinner>
-            </div>
-          ) : (
             <Form>
               <Form.Group className="mb-3">
                 <Form.Label>Product ID</Form.Label>
@@ -210,11 +201,10 @@ function Product() {
                 />
               </Form.Group>
             </Form>
-          )}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>Close</Button>
-          <Button variant="primary" onClick={handleSaveChanges} disabled={isLoading}>Save Changes</Button>
+          <Button variant="primary" onClick={handleSaveChanges}>Save Changes</Button>
         </Modal.Footer>
       </Modal>
       <Logout />
